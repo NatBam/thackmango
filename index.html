@@ -12,14 +12,18 @@
         /* อนิเมชั่นหมุนโหลด */
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* ปรับแต่ง Scrollbar สำหรับรายการที่ยาว */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 8px; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[95vh]">
         
         <!-- Header -->
-        <div class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md relative z-10">
+        <div class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md relative z-10 shrink-0">
             <div class="flex items-center space-x-2">
                 <!-- Icon Scan -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M16 7v10"/></svg>
@@ -32,7 +36,7 @@
         </div>
 
         <!-- Settings Panel -->
-        <div id="settingsPanel" class="p-4 bg-blue-50 border-b border-blue-100 hidden-panel">
+        <div id="settingsPanel" class="p-4 bg-blue-50 border-b border-blue-100 hidden-panel shrink-0">
             <label class="block text-sm font-semibold text-blue-900 mb-2">
                 Google Apps Script URL (ตั้งค่าครั้งแรก)
             </label>
@@ -43,29 +47,36 @@
         </div>
 
         <!-- Main Content -->
-        <div class="p-6">
+        <div class="p-6 flex-1 flex flex-col overflow-hidden">
             
             <!-- Input Section -->
-            <div class="mb-6">
+            <div class="mb-4 shrink-0">
                 <label class="block text-gray-700 text-sm font-bold mb-2">
                     ยิงบาร์โค้ด / กรอกเลขพัสดุ
                 </label>
                 <input type="text" id="barcodeInput" placeholder="สแกนบาร์โค้ดที่นี่..." class="w-full p-4 text-xl border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-center uppercase tracking-wider font-mono" />
-                <p class="text-xs text-gray-500 mt-2 text-center">
-                    (เมื่อเครื่อง PDA สแกนเสร็จ ข้อมูลจะลงมาอยู่ด้านล่าง)
-                </p>
             </div>
 
-            <!-- Display Scanned Data -->
-            <div class="mb-6 min-h-[120px] bg-gray-100 rounded-xl p-4 border border-gray-200 flex flex-col items-center justify-center relative">
-                <span class="text-sm text-gray-500 absolute top-2 left-3">ข้อมูลที่เตรียมบันทึก:</span>
-                <div id="scannedDataDisplay" class="text-gray-400 text-center mt-4 italic">
-                    ยังไม่มีข้อมูล
+            <!-- Display Scanned Data List -->
+            <div class="mb-4 flex-1 flex flex-col overflow-hidden">
+                <div class="flex justify-between items-center mb-2 px-1 shrink-0">
+                    <span class="text-sm font-bold text-gray-700">รายการที่เตรียมบันทึก</span>
+                    <span id="listCountBadge" class="text-xs font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded-full hidden">0 รายการ</span>
+                </div>
+                
+                <!-- Scrollable List Container -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar bg-gray-100 rounded-xl p-3 border border-gray-200 relative">
+                    <div id="scannedDataDisplay" class="flex flex-col space-y-2 min-h-full">
+                        <!-- Default empty state -->
+                        <div class="m-auto text-gray-400 italic flex items-center justify-center h-full w-full">
+                            ยังไม่มีข้อมูล
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Action Button -->
-            <button id="saveDataBtn" disabled class="w-full py-4 rounded-xl flex items-center justify-center space-x-2 text-lg font-bold shadow-lg transition-all bg-gray-300 text-gray-500 cursor-not-allowed">
+            <button id="saveDataBtn" disabled class="w-full py-4 rounded-xl flex items-center justify-center space-x-2 text-lg font-bold shadow-lg transition-all bg-gray-300 text-gray-500 cursor-not-allowed shrink-0">
                 <!-- Icon Save (Default) -->
                 <svg id="saveIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 
@@ -76,7 +87,7 @@
             </button>
 
             <!-- Status Messages -->
-            <div id="statusMessage" class="mt-4 p-3 rounded-lg flex items-center space-x-2 text-sm hidden-panel font-medium">
+            <div id="statusMessage" class="mt-4 p-3 rounded-lg flex items-center space-x-2 text-sm hidden-panel font-medium shrink-0">
                 <!-- Icon container will be injected here via JS -->
                 <span id="statusText"></span>
             </div>
@@ -86,6 +97,9 @@
 
     <!-- Javascript Logic -->
     <script>
+        // Array เพื่อเก็บรายการทั้งหมดที่สแกน
+        let scannedList = [];
+        
         document.addEventListener('DOMContentLoaded', () => {
             // DOM Elements
             const barcodeInput = document.getElementById('barcodeInput');
@@ -94,6 +108,7 @@
             const apiUrlInput = document.getElementById('apiUrlInput');
             const saveSettingsBtn = document.getElementById('saveSettingsBtn');
             const scannedDataDisplay = document.getElementById('scannedDataDisplay');
+            const listCountBadge = document.getElementById('listCountBadge');
             const saveDataBtn = document.getElementById('saveDataBtn');
             const saveIcon = document.getElementById('saveIcon');
             const loadingIcon = document.getElementById('loadingIcon');
@@ -103,7 +118,6 @@
 
             // State variables
             let apiUrl = localStorage.getItem('googleSheetApiUrl') || '';
-            let scannedData = null;
             let statusTimeout = null;
 
             // Initialize API URL input
@@ -139,23 +153,56 @@
                     e.preventDefault();
                     const val = barcodeInput.value.trim();
                     if (val !== '') {
-                        scannedData = val;
+                        // นำข้อมูลใหม่ไว้ด้านบนสุดของรายการ
+                        scannedList.unshift(val);
                         barcodeInput.value = ''; // clear input
                         updateDisplay();
                     }
                 }
             });
 
-            // Update UI based on scanned data
+            // ฟังก์ชันลบรายการเมื่อกดปุ่มถังขยะ
+            window.removeScannedItem = function(index) {
+                scannedList.splice(index, 1);
+                updateDisplay();
+                barcodeInput.focus();
+            };
+
+            // Update UI based on scanned list
             function updateDisplay() {
-                if (scannedData) {
-                    scannedDataDisplay.innerHTML = `<span class="text-2xl font-bold text-gray-800 tracking-widest break-all">${scannedData}</span>`;
+                if (scannedList.length > 0) {
+                    // อัปเดตตัวเลขจำนวน
+                    listCountBadge.style.display = 'inline-block';
+                    listCountBadge.innerText = `${scannedList.length} รายการ`;
+                    
+                    // สร้าง HTML สำหรับรายการ
+                    let html = '';
+                    scannedList.forEach((item, index) => {
+                        html += `
+                            <div class="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-200 shadow-sm transition-all hover:border-blue-300">
+                                <span class="text-xl font-bold text-gray-800 tracking-widest break-all mr-2">${item}</span>
+                                <button onclick="removeScannedItem(${index})" class="p-2 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded-lg transition-colors shrink-0 outline-none" title="ลบรายการนี้">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    
+                    scannedDataDisplay.innerHTML = html;
+                    
+                    // เปิดปุ่มบันทึก
                     saveDataBtn.disabled = false;
-                    saveDataBtn.className = "w-full py-4 rounded-xl flex items-center justify-center space-x-2 text-lg font-bold shadow-lg transition-all bg-green-600 hover:bg-green-700 text-white active:scale-95";
+                    saveDataBtn.className = "w-full py-4 rounded-xl flex items-center justify-center space-x-2 text-lg font-bold shadow-lg transition-all bg-green-600 hover:bg-green-700 text-white active:scale-95 shrink-0";
+                    btnText.innerText = `บันทึกข้อมูล (${scannedList.length})`;
                 } else {
-                    scannedDataDisplay.innerHTML = `<span class="text-gray-400 italic">ยังไม่มีข้อมูล</span>`;
+                    // หากไม่มีข้อมูล
+                    listCountBadge.style.display = 'none';
+                    scannedDataDisplay.innerHTML = `<div class="m-auto text-gray-400 italic flex items-center justify-center h-full w-full">ยังไม่มีข้อมูล</div>`;
+                    
+                    // ปิดปุ่มบันทึก
                     saveDataBtn.disabled = true;
-                    saveDataBtn.className = "w-full py-4 rounded-xl flex items-center justify-center space-x-2 text-lg font-bold shadow-lg transition-all bg-gray-300 text-gray-500 cursor-not-allowed";
+                    saveDataBtn.className = "w-full py-4 rounded-xl flex items-center justify-center space-x-2 text-lg font-bold shadow-lg transition-all bg-gray-300 text-gray-500 cursor-not-allowed shrink-0";
+                    btnText.innerText = 'บันทึกข้อมูล';
                 }
             }
 
@@ -166,13 +213,13 @@
                 statusText.innerText = message;
                 
                 if (type === 'success') {
-                    statusMessage.className = "mt-4 p-3 bg-green-100 text-green-800 rounded-lg flex items-center space-x-2 text-sm font-medium animate-pulse";
+                    statusMessage.className = "mt-4 p-3 bg-green-100 text-green-800 rounded-lg flex items-center space-x-2 text-sm font-medium animate-pulse shrink-0";
                     statusMessage.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600 shrink-0"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
                         <span>${message}</span>
                     `;
                 } else {
-                    statusMessage.className = "mt-4 p-3 bg-red-100 text-red-800 rounded-lg flex items-center space-x-2 text-sm font-medium";
+                    statusMessage.className = "mt-4 p-3 bg-red-100 text-red-800 rounded-lg flex items-center space-x-2 text-sm font-medium shrink-0";
                     statusMessage.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-600 shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         <span>${message}</span>
@@ -181,12 +228,12 @@
 
                 statusTimeout = setTimeout(() => {
                     statusMessage.style.display = 'none';
-                }, 3000);
+                }, 4000);
             }
 
             // Save Data to Google Sheet
             saveDataBtn.addEventListener('click', async () => {
-                if (!scannedData) return;
+                if (scannedList.length === 0) return;
 
                 if (!apiUrl) {
                     showStatus('error', 'กรุณาตั้งค่า Google Web App URL ที่เมนูฟันเฟืองก่อน');
@@ -196,35 +243,40 @@
 
                 // Set Loading State
                 saveDataBtn.disabled = true;
-                saveDataBtn.className = "w-full py-4 rounded-xl flex items-center justify-center space-x-2 text-lg font-bold shadow-lg transition-all bg-blue-400 text-white cursor-wait";
+                saveDataBtn.className = "w-full py-4 rounded-xl flex items-center justify-center space-x-2 text-lg font-bold shadow-lg transition-all bg-blue-400 text-white cursor-wait shrink-0";
                 saveIcon.style.display = 'none';
                 loadingIcon.style.display = 'block';
-                btnText.innerText = 'กำลังบันทึก...';
+                const totalItemsToSave = scannedList.length;
+                btnText.innerText = `กำลังบันทึก ${totalItemsToSave} รายการ...`;
 
                 try {
-                    // Send data using no-cors mode
-                    await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'text/plain;charset=utf-8',
-                        },
-                        body: JSON.stringify({ trackingNumber: scannedData }),
-                    });
+                    // วนลูปส่งข้อมูลทีละรายการไปยัง Google Apps Script
+                    for (let i = 0; i < scannedList.length; i++) {
+                        await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'text/plain;charset=utf-8',
+                            },
+                            body: JSON.stringify({ trackingNumber: scannedList[i] }),
+                        });
+                    }
 
-                    showStatus('success', `บันทึกเลข ${scannedData} สำเร็จ!`);
-                    scannedData = null;
+                    showStatus('success', `บันทึกข้อมูล ${totalItemsToSave} รายการ สำเร็จ!`);
+                    scannedList = []; // ล้างข้อมูลหลังบันทึกสำเร็จ
                     updateDisplay();
                     barcodeInput.focus();
 
                 } catch (error) {
                     showStatus('error', 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
                     console.error("Error:", error);
-                    updateDisplay(); // Re-enable button
+                    updateDisplay(); // Re-enable button & revert UI
                 } finally {
                     // Reset Button State
-                    saveIcon.style.display = 'block';
-                    loadingIcon.style.display = 'none';
-                    btnText.innerText = 'บันทึกข้อมูล';
+                    if (scannedList.length === 0) {
+                        saveIcon.style.display = 'block';
+                        loadingIcon.style.display = 'none';
+                        btnText.innerText = 'บันทึกข้อมูล';
+                    }
                 }
             });
         });
